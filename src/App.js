@@ -1,27 +1,16 @@
-import React, { Component } from "react";
+import React, { useEffect } from "react";
+import {connect} from 'react-redux'
 import "./App.css";
 import { CardList } from "./components/card-list/card-list-component";
 import { Search } from "./components/search/search-component";
+import { setSearchField,requestRobots} from './action'
 
-class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      monsters: [],
-      searchField: "",
-    };
-  }
-  componentDidMount() {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((users) => this.setState({ monsters: users }));
-  }
-  handleChange = (e) => {
-    this.setState({ searchField: e.target.value });
-  }
-
-  render() {
-    const { monsters, searchField } = this.state;
+function App(props){
+  
+   const {searchField,onSearchChange,monsters} = props;
+  useEffect(()=>{
+    props.onRequestRobots();
+  },[])
     const filteredMonsters = monsters.filter((monster) =>
       monster.name.toLowerCase().includes(searchField.toLocaleLowerCase())
     );
@@ -30,12 +19,24 @@ class App extends Component {
         <h1>Monsteers</h1>
         <Search
           placeholder="search monsteers"
-          handleChange={this.handleChange}
+          handleChange={onSearchChange}
         ></Search>
         <CardList monsters={filteredMonsters} />
       </div>
     );
   }
+const mapStateToProps = state =>{
+  return {
+    searchField:state.searchRobots.searchField,
+    monsters:state.requestRobots.robots,
+    error:state.requestRobots.error,
+    isPending:state.requestRobots.isPending,
+  }
 }
-
-export default App;
+const mapDispatchToProps = dispatch=>{
+  return {
+    onRequestRobots:()=>dispatch(requestRobots()),
+    onSearchChange:e=>dispatch(setSearchField(e.target.value))
+  }
+}
+export default connect(mapStateToProps,mapDispatchToProps)(App)
